@@ -40,7 +40,6 @@ class Database {
   friend class Scratch;
   friend class Scanner;
   friend class Stream;
-  friend std::vector<char> Serialize(const HyperScan::Database &db);
  public:
   enum Type : unsigned int {
 	STREAM = HS_MODE_STREAM,

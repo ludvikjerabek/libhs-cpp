@@ -95,6 +95,37 @@ int main() {
     return 0;
 }
 ```
+# Virtual IMatcher vs Non-Virtual C++ 20 Concept Matching
+
+During performance testing, there was no tangible difference cause by Vtable lookup. If you are seeing issues let me know, it's possible to use C++ 20 `concept` instead of IMatcher. Since there was no notable difference, the concept implementation was not included in the library. 
+
+Matches found: 103,642,502
+
+Non-Virtual concept Matcher:  
+  
+Time: 2070102 microseconds  
+Time: 2075437 microseconds  
+Time: 2040294 microseconds  
+Time: 2038348 microseconds  
+Time: 2051992 microseconds  
+Time: 2063293 microseconds  
+Time: 2058719 microseconds  
+Time: 2061387 microseconds  
+Time: 2056725 microseconds  
+Time: 2079855 microseconds  
+  
+Virtual IMatcher:  
+
+Time: 2068737 microseconds  
+Time: 2048733 microseconds  
+Time: 2050551 microseconds  
+Time: 2058243 microseconds  
+Time: 2093890 microseconds  
+Time: 2069945 microseconds  
+Time: 2085806 microseconds  
+Time: 2079505 microseconds  
+Time: 2078688 microseconds  
+Time: 2057927 microseconds  
 
 # License
 

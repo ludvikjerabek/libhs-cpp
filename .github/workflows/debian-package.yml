@@ -20,7 +20,7 @@ jobs:
             codename: 'noble'
             debhelper: '13'
           - ubuntu: 'ubuntu-26.04'
-            codename: 'questing'
+            codename: 'resolute'
             debhelper: '13'
             
     runs-on: ${{ matrix.ubuntu }}

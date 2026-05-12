@@ -8,7 +8,7 @@ jobs:
   build_deb:
     strategy:
       matrix:
-        ubuntu: ['ubuntu-20.04', 'ubuntu-22.04', 'ubuntu-24.04']
+        ubuntu: ['ubuntu-20.04', 'ubuntu-22.04', 'ubuntu-24.04', 'ubuntu-26.04']
         include:
           - ubuntu: 'ubuntu-20.04'
             codename: 'focal'
@@ -19,6 +19,10 @@ jobs:
           - ubuntu: 'ubuntu-24.04'
             codename: 'noble'
             debhelper: '13'
+          - ubuntu: 'ubuntu-26.04'
+            codename: 'questing'
+            debhelper: '13'
+            
     runs-on: ${{ matrix.ubuntu }}
     defaults:
       run:

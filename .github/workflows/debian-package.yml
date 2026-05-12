@@ -1,7 +1,9 @@
 name: Build and Release Debian Package
+
 on:
   release:
     types: [created]
+
 jobs:
   build_deb:
     strategy:
@@ -18,15 +20,17 @@ jobs:
             codename: 'noble'
             debhelper: '13'
           - ubuntu: 'ubuntu-26.04'
-            codename: 'resolute'
+            codename: 'questing'
             debhelper: '13'
-          
+            
     runs-on: ${{ matrix.ubuntu }}
     defaults:
       run:
         working-directory: ${{ github.workspace }}
+
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
+
       - name: Install build dependencies
         run: |
           sudo apt-get update
@@ -38,41 +42,49 @@ jobs:
             cmake \
             libhyperscan-dev \
             debhelper
+
       - name: Set version
         run: |
           echo "PACKAGE_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
           echo "DISTRO_CODENAME=${{ matrix.codename }}" >> $GITHUB_ENV
+
       - name: Create debian package files
         run: |
           VERSION=${{ env.PACKAGE_VERSION }}
-        
+          
           # Setup directory structure
           cd ..
           cp -r hyperscan-cpp hyperscan-cpp-${VERSION}
           cd hyperscan-cpp-${VERSION}
-        
+          
           # Create orig archive
           tar czf ../hyperscan-cpp_${VERSION}.orig.tar.gz .
-        
+          
           # Initialize debian directory with environment variables to avoid prompts
           export DEBEMAIL="ludvikjerabek@users.noreply.github.com"
           export DEBFULLNAME="Ludvik Jerabek"
           dh_make --library --yes -p hyperscan-cpp_${VERSION}
+
           # Remove debian/compat if it exists
           rm -f debian/compat
+
           # Create a proper changelog
           cat << EOF > debian/changelog
           hyperscan-cpp (${VERSION}-1~${{ env.DISTRO_CODENAME }}) ${{ env.DISTRO_CODENAME }}; urgency=medium
+
             * Initial release
             * C++ wrapper for Intel's Hyperscan regular expression matching engine
-           -- Ludvik Jerabek <ludvikjerabek@users.noreply.github.com> $(date -R)
+
+           -- Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>  $(date -R)
           EOF
+
           # Create a proper copyright file
           cat << EOF > debian/copyright
           Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
           Upstream-Name: hyperscan-cpp
           Upstream-Contact: Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>
           Source: https://github.com/ludvikjerabek/hyperscan-cpp
+
           Files: *
           Copyright: 2024 Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>
           License: MIT
@@ -93,10 +105,12 @@ jobs:
            LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
            OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
            SOFTWARE.
+
           Files: debian/*
           Copyright: 2024 Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>
           License: MIT
           EOF
+
           # Replace default debian files with our versions
           cat << EOF > debian/control
           Source: hyperscan-cpp
@@ -107,12 +121,14 @@ jobs:
            cmake,
            libhyperscan-dev
           Standards-Version: 4.5.1
+
           Package: libhyperscan-cpp
           Architecture: any
           Depends: \${shlibs:Depends}, \${misc:Depends}, libhyperscan-dev
           Description: C++ wrapper for Hyperscan library
            A C++ wrapper library for Intel's Hyperscan regular expression matching engine.
            This package contains the shared library.
+
           Package: libhyperscan-cpp-dev
           Architecture: any
           Section: libdevel
@@ -121,31 +137,39 @@ jobs:
            A C++ wrapper library for Intel's Hyperscan regular expression matching engine.
            This package contains development files.
           EOF
+
           cat << EOF > debian/rules
           #!/usr/bin/make -f
           %:
-           dh \$@ --buildsystem=cmake
+          	dh \$@ --buildsystem=cmake
+
           override_dh_auto_configure:
-           dh_auto_configure -- \
-           -DCMAKE_BUILD_TYPE=Release \
-           -DBUILD_SHARED_LIBS=ON \
-           -DBUILD_STATIC_LIBS=OFF \
-           -DCMAKE_INSTALL_PREFIX=/usr
+          	dh_auto_configure -- \
+          		-DCMAKE_BUILD_TYPE=Release \
+          		-DBUILD_SHARED_LIBS=ON \
+          		-DBUILD_STATIC_LIBS=OFF \
+          		-DCMAKE_INSTALL_PREFIX=/usr
+
           override_dh_install:
-           dh_install --sourcedir=debian/tmp
+          	dh_install --sourcedir=debian/tmp
           EOF
+
           chmod +x debian/rules
+
           cat << EOF > debian/libhyperscan-cpp.install
           usr/lib/libhyperscan-cpp.so.*
           EOF
+
           cat << EOF > debian/libhyperscan-cpp-dev.install
           usr/include/hyperscan-cpp/*
           usr/lib/libhyperscan-cpp.so
           usr/lib/cmake/hyperscan-cpp/*
           EOF
+
           # Create the source format file
           mkdir -p debian/source
           echo "3.0 (quilt)" > debian/source/format
+
       - name: Build debian package
         run: |
           VERSION=${{ env.PACKAGE_VERSION }}
@@ -154,19 +178,22 @@ jobs:
           mkdir -p ../packages
           cp ../libhyperscan-cpp_*.deb ../packages/
           cp ../libhyperscan-cpp-dev_*.deb ../packages/
+
       - name: Test package installation
         run: |
           VERSION=${{ env.PACKAGE_VERSION }}
           cd ..
           sudo dpkg -i packages/libhyperscan-cpp_*.deb
           sudo dpkg -i packages/libhyperscan-cpp-dev_*.deb
+
       - name: Lint package
         run: |
           VERSION=${{ env.PACKAGE_VERSION }}
           cd ..
           lintian packages/*.deb
+
       - name: Upload packages as artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: debian-packages-${{ matrix.ubuntu }}
           path: /home/runner/work/hyperscan-cpp/packages/*.deb
@@ -174,8 +201,9 @@ jobs:
           if-no-files-found: warn
           compression-level: 6
           overwrite: false
+
       - name: Upload to Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v1
         with:
           files: /home/runner/work/hyperscan-cpp/packages/*.deb
         env:

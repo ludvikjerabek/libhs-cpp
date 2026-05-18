@@ -21,8 +21,8 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef HYPERSCAN_SCANNER_H
-#define HYPERSCAN_SCANNER_H
+#ifndef LIBHS_SCANNER_H
+#define LIBHS_SCANNER_H
 
 #include <hs/hs.h>
 #include <string>
@@ -46,4 +46,4 @@ namespace HyperScan {
         static hs_error_t Scan(const Stream &stream, const Scratch &scratch, IMatcher &matcher, const char *data, unsigned int length);
     };
 }
-#endif //HYPERSCAN_SCANNER_H
+#endif //LIBHS_SCANNER_H

@@ -1,6 +1,6 @@
 /*
  * @file Exceptions.h
- * @brief HyperScan exceptions used by various class objects
+ * @brief HyperScan or VectorScan exceptions used by various class objects
  * @author Ludvik Jerabek
  * @version 1.0 04/08/2021
  *
@@ -21,8 +21,8 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef HYPERSCAN_EXCEPTIONS_H
-#define HYPERSCAN_EXCEPTIONS_H
+#ifndef LIBHS_EXCEPTIONS_H
+#define LIBHS_EXCEPTIONS_H
 
 #include <exception>
 #include <string>
@@ -126,4 +126,4 @@ private:
 };
 }
 
-#endif //HYPERSCAN_EXCEPTIONS_H
+#endif //LIBHS_EXCEPTIONS_H

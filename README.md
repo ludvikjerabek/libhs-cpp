@@ -1,138 +1,231 @@
-# HyperScan C++
+# libhs-cpp
 
-C++ Wrapper for Intel Hyperscan
+Modern C++20 RAII wrapper for Hyperscan-compatible pattern matching engines.
 
-# About Hyperscan
+Compatible with:
 
-Hyperscan is a high-performance multiple regex matching library. It follows the regular expression syntax of the
-commonly-used libpcre library, but is a standalone library with its own C API.
+* Intel Hyperscan
+* VectorCamp VectorScan
 
-Hyperscan uses hybrid automata techniques to allow simultaneous matching of large numbers (up to tens of thousands) of
-regular expressions and for the matching of regular expressions across streams of data.
+# About
 
-Hyperscan is typically used in a DPI library stack.
+`libhs-cpp` is a modern C++20 wrapper around the `libhs` API ecosystem. It provides RAII abstractions for databases, scratch regions, streams, patterns, literals, scanners, and match callbacks while remaining fully compatible with existing Hyperscan-style APIs and workflows.
 
-The official homepage for Hyperscan is at [www.hyperscan.io](https://www.hyperscan.io).
+The underlying backend may be either Intel Hyperscan or VectorScan. Since both engines expose the same `libhs` API surface, no code changes are required when switching between implementations.
+
+These engines are designed for high-performance multiple regular expression matching and are commonly used in DPI, IDS/IPS, filtering, malware analysis, and high-speed inspection pipelines.
+
+Features include:
+
+* RAII resource management
+* C++20 support
+* Block and streaming scanning
+* Multi-pattern compilation
+* Literal matching support
+* Exception-safe abstractions
+* Minimal overhead wrapper design
+* Backend agnostic architecture
+
+# Backend Compatibility
+
+This project targets the `libhs` API contract rather than a specific implementation.
+
+Supported backends:
+
+| Backend               | Status    |
+| --------------------- | --------- |
+| Intel Hyperscan       | Supported |
+| VectorCamp VectorScan | Supported |
+
+Because both libraries expose compatible APIs and binary interfaces, applications built with `libhs-cpp` can typically switch between backends without source modifications.
+
+# Installation Notes
+
+Both Hyperscan and VectorScan generally install the same files:
+
+```text
+hs/hs.h
+libhs.so
+```
+
+Because of this, installing both globally into the same system prefix may cause conflicts.
+
+If multiple backends are installed, it is recommended to isolate them into separate installation prefixes such as:
+
+```text
+/opt/hyperscan
+/opt/vectorscan
+```
+
+Then specify the backend explicitly during CMake configuration:
+
+```bash
+cmake -S . -B build \
+  -DLIBHS_INCLUDE_DIR=/opt/vectorscan/include \
+  -DLIBHS_LIBRARY=/opt/vectorscan/lib/libhs.so
+```
 
 # General Usage
 
-The example provided below shows a single pattern match using a block database. Other examples can be found in
-the `Examples` folder in the project repository.
+The example below demonstrates a single-pattern block scan.
 
-```c++
+Additional examples can be found in the `examples` directory.
+
+```cpp
 #include <iostream>
 #include <fstream>
 #include "HyperScan.h"
 
 using namespace std;
 
-// Create a custom IMatcher object to deal with context and matching.
+// Create a custom matcher object
 class MyMatcher : public HyperScan::IMatcher {
 public:
     MyMatcher() : matches(0) {}
-    ~MyMatcher()= default;
-    // OnMatch is called when a match occurs
-    int OnMatch(unsigned int id, unsigned long long from, unsigned long long to, unsigned int flags) override {
-        // Printing output will slow down matching but it's for demonstration purposes.
+
+    ~MyMatcher() = default;
+
+    int OnMatch(unsigned int id,
+                unsigned long long from,
+                unsigned long long to,
+                unsigned int flags) override
+    {
+        // Printing output slows scanning and is shown only for demonstration
         std::cout << "   ID: " << id << std::endl;
         std::cout << " From: " << from << std::endl;
         std::cout << "   To: " << to << std::endl;
         std::cout << "Flags: " << flags << std::endl;
-        // Count matches
+
         matches++;
         return 0;
     }
-    // Show number or matches for the data set
-    void Dump(){
+
+    void Dump() {
         std::cout << "Matches found: " << matches << std::endl;
     }
+
 private:
     int matches;
 };
 
 int main() {
-    // Global HyperScan functions
 
-    // Hyperscan requires the Supplemental Streaming SIMD Extensions 3 instruction set. This function can be called
-    // on any x86 platform to determine if the system provides the required instruction set.
-    std::cout << "HyperScan Valid: " << HyperScan::ValidPlatform() << std::endl;
+    // Validate platform support
+    std::cout << "Platform Valid: "
+              << HyperScan::ValidPlatform()
+              << std::endl;
 
-    // Get the version information. A string containing the version number of this release build and the date of the build.
-    std::cout << "HyperScan Version: " << HyperScan::GetVersion() << std::endl;
+    // Get backend version information
+    std::cout << "Engine Version: "
+              << HyperScan::GetVersion()
+              << std::endl;
 
-    // Create a pattern object
-    HyperScan::Pattern pattern("^192\\.152\\.201\\.85$", HyperScan::Pattern::CASELESS |HyperScan::Pattern::MULTILINE );
+    // Create a pattern
+    HyperScan::Pattern pattern(
+        "^192\\.152\\.201\\.85$",
+        HyperScan::Pattern::CASELESS |
+        HyperScan::Pattern::MULTILINE
+    );
 
-    // Create a block database from the current pattern object
-    HyperScan::BlockDatabase pattern_db = pattern.GetBlockDatabase();
+    // Create a block database
+    HyperScan::BlockDatabase pattern_db =
+        pattern.GetBlockDatabase();
 
-    // Additional data you can query from the DB no required but just for visibility
-    std::cout << "DB Size: " << pattern_db.GetSize() << std::endl;
-    std::cout << "DB Info: " << pattern_db.GetInfo() << std::endl;
+    std::cout << "DB Size: "
+              << pattern_db.GetSize()
+              << std::endl;
 
-    // Create a Scratch object from the DB
-    HyperScan::Scratch scratch = pattern_db.GetScratch();
+    std::cout << "DB Info: "
+              << pattern_db.GetInfo()
+              << std::endl;
 
-    // Create your custom matcher object
+    // Create scratch space
+    HyperScan::Scratch scratch =
+        pattern_db.GetScratch();
+
+    // Create matcher
     MyMatcher matcher;
 
-    // Read a block of data
-    std::ifstream file("ips.txt", std::ios::binary | std::ios::ate);
-    if( !file.is_open() ) {
-        std::cout << "Failed to open ips.txt" << std::endl;
+    // Read input block
+    std::ifstream file(
+        "ips.txt",
+        std::ios::binary | std::ios::ate
+    );
+
+    if (!file.is_open()) {
+        std::cout << "Failed to open ips.txt"
+                  << std::endl;
         return 1;
     }
+
     std::streamsize size = file.tellg();
+
     file.seekg(0, std::ios::beg);
+
     std::vector<char> block(size);
+
     file.read(block.data(), size);
 
-    // Scan the block of data
-    HyperScan::Scanner::Scan(pattern_db,scratch,matcher,block);
+    // Scan block
+    HyperScan::Scanner::Scan(
+        pattern_db,
+        scratch,
+        matcher,
+        block
+    );
 
     matcher.Dump();
 
     return 0;
 }
 ```
-# Virtual IMatcher vs Non-Virtual C++ 20 Concept Matching
 
-During performance testing, there was no tangible difference cause by Vtable lookup. If you are seeing issues let me know, it's possible to use C++ 20 `concept` instead of IMatcher. Since there was no notable difference, the concept implementation was not included in the library. 
+# Virtual IMatcher vs C++20 Concepts
 
+Performance testing showed no measurable performance penalty from virtual dispatch through `IMatcher`.
+
+Since there was no significant difference in throughput, a concept-based matcher implementation was not added to the library in order to keep the API simpler and easier to maintain.
+
+Benchmark sample:
+
+```text
 Matches found: 103,642,502
 
-Non-Virtual concept Matcher:  
-  
-Time: 2070102 microseconds  
-Time: 2075437 microseconds  
-Time: 2040294 microseconds  
-Time: 2038348 microseconds  
-Time: 2051992 microseconds  
-Time: 2063293 microseconds  
-Time: 2058719 microseconds  
-Time: 2061387 microseconds  
-Time: 2056725 microseconds  
-Time: 2079855 microseconds  
-  
-Virtual IMatcher:  
+Non-Virtual Concept Matcher:
 
-Time: 2068737 microseconds  
-Time: 2048733 microseconds  
-Time: 2050551 microseconds  
-Time: 2058243 microseconds  
-Time: 2093890 microseconds  
-Time: 2069945 microseconds  
-Time: 2085806 microseconds  
-Time: 2079505 microseconds  
-Time: 2078688 microseconds  
-Time: 2057927 microseconds  
+Time: 2070102 microseconds
+Time: 2075437 microseconds
+Time: 2040294 microseconds
+Time: 2038348 microseconds
+Time: 2051992 microseconds
+Time: 2063293 microseconds
+Time: 2058719 microseconds
+Time: 2061387 microseconds
+Time: 2056725 microseconds
+Time: 2079855 microseconds
+
+Virtual IMatcher:
+
+Time: 2068737 microseconds
+Time: 2048733 microseconds
+Time: 2050551 microseconds
+Time: 2058243 microseconds
+Time: 2093890 microseconds
+Time: 2069945 microseconds
+Time: 2085806 microseconds
+Time: 2079505 microseconds
+Time: 2078688 microseconds
+Time: 2057927 microseconds
+```
 
 # License
 
-Hyperscan C++ is licensed under the MIT License. See the LICENSE file in the project repository.
+`libhs-cpp` is licensed under the MIT License.
+
+See the LICENSE file for additional information.
 
 # Versioning
 
-The `master` branch on Github will always contain the most recent release of Hyperscan C++. Each version released
-to `master` goes through QA and testing before it is released; if you're a user, rather than a developer, this is the
-version you should be using.
+The `master` branch always contains the most recent stable release.
+
+All releases go through testing and validation before publication.

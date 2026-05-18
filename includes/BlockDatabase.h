@@ -1,6 +1,6 @@
 /*
  * @file BlockDatabase.h
- * @brief Derived from Database class provides BlockDatabase functions for HyperScan
+ * @brief Derived from Database class provides BlockDatabase functions for HyperScan or VectorScan
  * @author Ludvik Jerabek
  * @version 1.0 04/08/2021
  *
@@ -21,8 +21,8 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef HYPERSCAN_BLOCKDATABASE_H
-#define HYPERSCAN_BLOCKDATABASE_H
+#ifndef LIBHS_BLOCKDATABASE_H
+#define LIBHS_BLOCKDATABASE_H
 
 #include "Database.h"
 
@@ -48,4 +48,4 @@ namespace HyperScan {
     };
 }
 
-#endif //HYPERSCAN_BLOCKDATABASE_H
+#endif //LIBHS_BLOCKDATABASE_H

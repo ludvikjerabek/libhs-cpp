@@ -1,6 +1,6 @@
 /*
  * @file Scratch.cpp
- * @brief Scratch class wrapper for hs_scratch_t for HyperScan
+ * @brief Scratch class wrapper for hs_scratch_t for HyperScan or VectorScan
  * @author Ludvik Jerabek
  * @version 1.0 04/08/2021
  *

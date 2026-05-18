@@ -1,6 +1,6 @@
 /*
  * @file Scratch.h
- * @brief Scratch class wrapper for hs_scratch_t for HyperScan
+ * @brief Scratch class wrapper for hs_scratch_t for HyperScan or VectorScan
  * @author Ludvik Jerabek
  * @version 1.0 04/08/2021
  *
@@ -21,8 +21,8 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef HYPERSCAN_SCRATCH_H
-#define HYPERSCAN_SCRATCH_H
+#ifndef LIBHS_SCRATCH_H
+#define LIBHS_SCRATCH_H
 
 #include <hs/hs.h>
 #include <memory>
@@ -55,4 +55,4 @@ namespace HyperScan {
     };
 }
 
-#endif //HYPERSCAN_SCRATCH_H
+#endif //LIBHS_SCRATCH_H

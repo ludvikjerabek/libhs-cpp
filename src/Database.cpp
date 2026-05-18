@@ -1,6 +1,6 @@
 /*
  * @file Database.cpp
- * @brief Database base class. Wrapper for hs_database_t for HyperScan
+ * @brief Database base class. Wrapper for hs_database_t for HyperScan or VectorScan
  * @author Ludvik Jerabek
  * @version 1.0 04/08/2021
  *

@@ -1,6 +1,6 @@
 /*
  * @file StreamDatabase.h
- * @brief Derived from Database class provides StreamDatabase functions for HyperScan
+ * @brief Derived from Database class provides StreamDatabase functions for HyperScan or VectorScan
  * @author Ludvik Jerabek
  * @version 1.0 04/08/2021
  *
@@ -22,8 +22,8 @@
  */
 
 
-#ifndef HYPERSCAN_STREAMDATABASE_H
-#define HYPERSCAN_STREAMDATABASE_H
+#ifndef LIBHS_STREAMDATABASE_H
+#define LIBHS_STREAMDATABASE_H
 
 #include "Database.h"
 #include "Stream.h"
@@ -61,4 +61,4 @@ namespace HyperScan {
     };
 }
 
-#endif //HYPERSCAN_STREAMDATABASE_H
+#endif //LIBHS_STREAMDATABASE_H

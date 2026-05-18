@@ -1,6 +1,6 @@
 /*
  * @file IMatcher.h
- * @brief Interfaced used for HyperScan match callbacks
+ * @brief Interfaced used for HyperScan or VectorScan match callbacks
  * @author Ludvik Jerabek
  * @version 1.0 04/08/2021
  *
@@ -21,8 +21,8 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef HYPERSCAN_IMATCHER_H
-#define HYPERSCAN_IMATCHER_H
+#ifndef LIBHS_IMATCHER_H
+#define LIBHS_IMATCHER_H
 namespace HyperScan {
     class IMatcher {
         friend class IScanner;
@@ -30,4 +30,4 @@ namespace HyperScan {
 	  [[nodiscard]] virtual int OnMatch(unsigned int id, unsigned long long from, unsigned long long to, unsigned int flags) = 0;
     };
 }
-#endif //HYPERSCAN_IMATCHER_H
+#endif //LIBHS_IMATCHER_H

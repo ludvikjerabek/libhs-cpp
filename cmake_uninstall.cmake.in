@@ -3,9 +3,9 @@ if(NOT DEFINED CMAKE_INSTALL_PREFIX)
 endif()
 
 file(GLOB_RECURSE files_to_remove
-    "${CMAKE_INSTALL_PREFIX}/lib/libhyperscan-cpp*"
-    "${CMAKE_INSTALL_PREFIX}/include/hyperscan-cpp/*"
-    "${CMAKE_INSTALL_PREFIX}/lib/cmake/hyperscan-cpp/*"
+    "${CMAKE_INSTALL_PREFIX}/lib/libhs-cpp*"
+    "${CMAKE_INSTALL_PREFIX}/include/libhs-cpp/*"
+    "${CMAKE_INSTALL_PREFIX}/lib/cmake/libhs-cpp/*"
 )
 
 foreach(file ${files_to_remove})
@@ -15,6 +15,6 @@ foreach(file ${files_to_remove})
     endif()
 endforeach()
 
-# Try to remove directories (will only work if empty)
-file(REMOVE_RECURSE "${CMAKE_INSTALL_PREFIX}/include/hyperscan-cpp")
-file(REMOVE_RECURSE "${CMAKE_INSTALL_PREFIX}/lib/cmake/hyperscan-cpp")
+# Try to remove directories
+file(REMOVE_RECURSE "${CMAKE_INSTALL_PREFIX}/include/libhs-cpp")
+file(REMOVE_RECURSE "${CMAKE_INSTALL_PREFIX}/lib/cmake/libhs-cpp")

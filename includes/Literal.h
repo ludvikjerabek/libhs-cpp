@@ -21,8 +21,8 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef HYPERSCAN_LITERAL_H
-#define HYPERSCAN_LITERAL_H
+#ifndef LIBHS_LITERAL_H
+#define LIBHS_LITERAL_H
 
 #include <hs/hs.h>
 #include "Database.h"
@@ -71,4 +71,4 @@ namespace HyperScan {
     };
 }
 
-#endif //HYPERSCAN_LITERAL_H
+#endif //LIBHS_LITERAL_H

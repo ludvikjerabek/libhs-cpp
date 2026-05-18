@@ -123,6 +123,18 @@ cmake --build build/
 
 ```
 
+# Installing libhs-cpp
+
+```bash
+sudo cmake --build ./build --target install
+```
+
+# Uninstalling libhs-cpp
+
+```bash
+sudo cmake --build ./build --target uninstall
+```
+
 # General Usage
 
 The example below demonstrates a single-pattern block scan.

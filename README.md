@@ -106,14 +106,22 @@ cmake -S . -B build \
   -DLIBHS_LIBRARY=/opt/vectorscan/lib/libhs.so
 ```
 
-# Building
+# Build libhs-cpp
 
 ```bash
-mkdir build
-cd build
-cmake ..
-cmake --build .
-````
+# Download libhs-cpp via Git
+git clone https://github.com/ludvikjerabek/libhs-cpp.git
+
+# Change directory into libhs-cpp source directory
+cd libhs-cpp
+
+# Create the Release build profile
+cmake -S . -B build/ -D CMAKE_BUILD_TYPE=Release
+
+# Compile the code
+cmake --build build/
+
+```
 
 # General Usage
 

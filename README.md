@@ -1,19 +1,27 @@
 # libhs-cpp
 
-Modern C++20 RAII wrapper for Hyperscan-compatible pattern matching engines.
+Modern C++20 RAII wrapper for libhs-compatible pattern matching engines.
 
 Compatible with:
 
-* Intel Hyperscan
-* VectorCamp VectorScan
+* [Intel Hyperscan](https://github.com/intel/hyperscan)
+* [VectorCamp VectorScan](https://github.com/VectorCamp/vectorscan)
 
 # About
 
 `libhs-cpp` is a modern C++20 wrapper around the `libhs` API ecosystem. It provides RAII abstractions for databases, scratch regions, streams, patterns, literals, scanners, and match callbacks while remaining fully compatible with existing Hyperscan-style APIs and workflows.
 
-The underlying backend may be either Intel Hyperscan or VectorScan. Since both engines expose the same `libhs` API surface, no code changes are required when switching between implementations.
+The underlying backend may be either Intel Hyperscan or VectorScan. Since both engines expose the same `libhs` API and ABI surface, applications can generally switch between backends without source modifications.
 
-These engines are designed for high-performance multiple regular expression matching and are commonly used in DPI, IDS/IPS, filtering, malware analysis, and high-speed inspection pipelines.
+`libhs` is the shared C API and ABI exposed by both engines.
+
+These engines are designed for high-performance multiple regular expression matching and are commonly used in:
+
+* DPI
+* IDS/IPS
+* Filtering
+* Malware analysis
+* High-speed inspection pipelines
 
 Features include:
 
@@ -24,7 +32,9 @@ Features include:
 * Literal matching support
 * Exception-safe abstractions
 * Minimal overhead wrapper design
-* Backend agnostic architecture
+* Backend-agnostic architecture
+
+The public C++ namespace currently remains `HyperScan` for API compatibility and stability across releases.
 
 # Backend Compatibility
 
@@ -32,38 +42,78 @@ This project targets the `libhs` API contract rather than a specific implementat
 
 Supported backends:
 
-| Backend               | Status    |
-| --------------------- | --------- |
-| Intel Hyperscan       | Supported |
-| VectorCamp VectorScan | Supported |
+| Backend                                                           | Status    |
+| ----------------------------------------------------------------- | --------- |
+| [Intel Hyperscan](https://github.com/intel/hyperscan)             | Supported |
+| [VectorCamp VectorScan](https://github.com/VectorCamp/vectorscan) | Supported |
 
 Because both libraries expose compatible APIs and binary interfaces, applications built with `libhs-cpp` can typically switch between backends without source modifications.
 
+# Requirements
+
+* C++20 compatible compiler
+* libhs-compatible backend
+* Linux
+
 # Installation Notes
 
-Both Hyperscan and VectorScan generally install the same files:
+Both Intel Hyperscan and VectorScan expose a compatible `libhs` API.
+
+They generally provide:
 
 ```text
 hs/hs.h
 libhs.so
 ```
 
-Because of this, installing both globally into the same system prefix may cause conflicts.
+The exact install paths are platform and distribution dependent.
 
-If multiple backends are installed, it is recommended to isolate them into separate installation prefixes such as:
+On Debian or Ubuntu systems, the shared library may be installed under an architecture-specific directory such as:
+
+```text
+/usr/include/hs/hs.h
+/usr/lib/x86_64-linux-gnu/libhs.so
+```
+
+or:
+
+```text
+/lib/x86_64-linux-gnu/libhs.so
+```
+
+Because both backends provide the same header and library names, installing both globally may cause package conflicts or ambiguity.
+
+If you need to choose a specific backend, pass the paths explicitly to CMake:
+
+```bash
+cmake -S . -B build \
+  -DLIBHS_INCLUDE_DIR=/usr/include \
+  -DLIBHS_LIBRARY=/usr/lib/x86_64-linux-gnu/libhs.so
+```
+
+For custom installs, separate prefixes are recommended:
 
 ```text
 /opt/hyperscan
 /opt/vectorscan
 ```
 
-Then specify the backend explicitly during CMake configuration:
+Example:
 
 ```bash
 cmake -S . -B build \
   -DLIBHS_INCLUDE_DIR=/opt/vectorscan/include \
   -DLIBHS_LIBRARY=/opt/vectorscan/lib/libhs.so
 ```
+
+# Building
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build .
+````
 
 # General Usage
 
@@ -74,7 +124,7 @@ Additional examples can be found in the `examples` directory.
 ```cpp
 #include <iostream>
 #include <fstream>
-#include "HyperScan.h"
+#include <libhs-cpp/HyperScan.h>
 
 using namespace std;
 

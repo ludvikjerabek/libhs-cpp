@@ -116,23 +116,23 @@ git clone https://github.com/ludvikjerabek/libhs-cpp.git
 cd libhs-cpp
 
 # Create the Release build profile
-cmake -S . -B build/ -D CMAKE_BUILD_TYPE=Release
+cmake -S . -B build -D CMAKE_BUILD_TYPE=Release
 
 # Compile the code
-cmake --build build/
+cmake --build build
 
 ```
 
 # Installing libhs-cpp
 
 ```bash
-sudo cmake --build ./build --target install
+sudo cmake --install build
 ```
 
 # Uninstalling libhs-cpp
 
 ```bash
-sudo cmake --build ./build --target uninstall
+sudo cmake --build build --target uninstall
 ```
 
 # General Usage

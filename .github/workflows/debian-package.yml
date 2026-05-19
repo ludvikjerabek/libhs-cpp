@@ -25,7 +25,7 @@ jobs:
         working-directory: ${{ github.workspace }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install build dependencies
         run: |
@@ -189,7 +189,7 @@ jobs:
           lintian packages/*.deb
 
       - name: Upload packages as artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: debian-packages-${{ matrix.ubuntu }}
           path: /home/runner/work/libhs-cpp/packages/*.deb
@@ -199,7 +199,7 @@ jobs:
           overwrite: false
 
       - name: Upload to Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           files: /home/runner/work/libhs-cpp/packages/*.deb
         env:

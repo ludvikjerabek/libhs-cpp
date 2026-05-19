@@ -121,7 +121,7 @@ jobs:
           Package: libhs-cpp
           Architecture: any
           Depends: \${shlibs:Depends}, \${misc:Depends}, libhyperscan-dev
-          Description: Modern C++20 RAII wrapper for libhs-compatible regex engines.
+          Description: Modern C++20 RAII wrapper for libhs-compatible ABI.
            Modern C++20 RAII wrapper for libhs-compatible regex engines.
            This package contains the shared library.
 
@@ -129,7 +129,7 @@ jobs:
           Architecture: any
           Section: libdevel
           Depends: libhs-cpp (= \${binary:Version}), \${misc:Depends}, libhyperscan-dev
-          Description: Development files for libhs-cpp
+          Description: Development files for Modern C++20 RAII wrapper for libhs-compatible ABI.
            Modern C++20 RAII wrapper for libhs-compatible regex engines.
            This package contains development files.
           EOF

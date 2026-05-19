@@ -50,26 +50,26 @@ jobs:
           
           # Setup directory structure
           cd ..
-          cp -r hyperscan-cpp hyperscan-cpp-${VERSION}
-          cd hyperscan-cpp-${VERSION}
+          cp -r libhs-cpp libhs-cpp-${VERSION}
+          cd libhs-cpp-${VERSION}
           
           # Create orig archive
-          tar czf ../hyperscan-cpp_${VERSION}.orig.tar.gz .
+          tar czf ../libhs-cpp_${VERSION}.orig.tar.gz .
           
           # Initialize debian directory with environment variables to avoid prompts
           export DEBEMAIL="ludvikjerabek@users.noreply.github.com"
           export DEBFULLNAME="Ludvik Jerabek"
-          dh_make --library --yes -p hyperscan-cpp_${VERSION}
+          dh_make --library --yes -p libhs-cpp_${VERSION}
 
           # Remove debian/compat if it exists
           rm -f debian/compat
 
           # Create a proper changelog
           cat << EOF > debian/changelog
-          hyperscan-cpp (${VERSION}-1~${{ env.DISTRO_CODENAME }}) ${{ env.DISTRO_CODENAME }}; urgency=medium
+          libhs-cpp (${VERSION}-1~${{ env.DISTRO_CODENAME }}) ${{ env.DISTRO_CODENAME }}; urgency=medium
 
             * Initial release
-            * C++ wrapper for Intel's Hyperscan regular expression matching engine
+            * Modern C++20 RAII wrapper for libhs-compatible regex engines
 
            -- Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>  $(date -R)
           EOF
@@ -77,9 +77,9 @@ jobs:
           # Create a proper copyright file
           cat << EOF > debian/copyright
           Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-          Upstream-Name: hyperscan-cpp
+          Upstream-Name: libhs-cpp
           Upstream-Contact: Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>
-          Source: https://github.com/ludvikjerabek/hyperscan-cpp
+          Source: https://github.com/ludvikjerabek/libhs-cpp
 
           Files: *
           Copyright: 2024 Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>
@@ -109,7 +109,7 @@ jobs:
 
           # Replace default debian files with our versions
           cat << EOF > debian/control
-          Source: hyperscan-cpp
+          Source: libhs-cpp
           Section: libs
           Priority: optional
           Maintainer: Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>
@@ -118,19 +118,19 @@ jobs:
            libhyperscan-dev
           Standards-Version: 4.5.1
 
-          Package: libhyperscan-cpp
+          Package: libhs-cpp
           Architecture: any
           Depends: \${shlibs:Depends}, \${misc:Depends}, libhyperscan-dev
-          Description: C++ wrapper for Hyperscan library
-           A C++ wrapper library for Intel's Hyperscan regular expression matching engine.
+          Description: Modern C++20 RAII wrapper for libhs-compatible regex engines.
+           Modern C++20 RAII wrapper for libhs-compatible regex engines.
            This package contains the shared library.
 
-          Package: libhyperscan-cpp-dev
+          Package: libhs-cpp-dev
           Architecture: any
           Section: libdevel
-          Depends: libhyperscan-cpp (= \${binary:Version}), \${misc:Depends}, libhyperscan-dev
-          Description: Development files for hyperscan-cpp
-           A C++ wrapper library for Intel's Hyperscan regular expression matching engine.
+          Depends: libhs-cpp (= \${binary:Version}), \${misc:Depends}, libhyperscan-dev
+          Description: Development files for libhs-cpp
+           Modern C++20 RAII wrapper for libhs-compatible regex engines.
            This package contains development files.
           EOF
 
@@ -152,14 +152,14 @@ jobs:
 
           chmod +x debian/rules
 
-          cat << EOF > debian/libhyperscan-cpp.install
-          usr/lib/libhyperscan-cpp.so.*
+          cat << EOF > debian/libhs-cpp.install
+          usr/lib/libhs-cpp.so.*
           EOF
 
-          cat << EOF > debian/libhyperscan-cpp-dev.install
-          usr/include/hyperscan-cpp/*
-          usr/lib/libhyperscan-cpp.so
-          usr/lib/cmake/hyperscan-cpp/*
+          cat << EOF > debian/libhs-cpp-dev.install
+          usr/include/libhs-cpp/*
+          usr/lib/libhs-cpp.so
+          usr/lib/cmake/libhs-cpp/*
           EOF
 
           # Create the source format file
@@ -169,18 +169,18 @@ jobs:
       - name: Build debian package
         run: |
           VERSION=${{ env.PACKAGE_VERSION }}
-          cd ../hyperscan-cpp-${VERSION}
+          cd ../libhs-cpp-${VERSION}
           dpkg-buildpackage -us -uc
           mkdir -p ../packages
-          cp ../libhyperscan-cpp_*.deb ../packages/
-          cp ../libhyperscan-cpp-dev_*.deb ../packages/
+          cp ../libhs-cpp_*.deb ../packages/
+          cp ../libhs-cpp-dev_*.deb ../packages/
 
       - name: Test package installation
         run: |
           VERSION=${{ env.PACKAGE_VERSION }}
           cd ..
-          sudo dpkg -i packages/libhyperscan-cpp_*.deb
-          sudo dpkg -i packages/libhyperscan-cpp-dev_*.deb
+          sudo dpkg -i packages/libhs-cpp_*.deb
+          sudo dpkg -i packages/libhs-cpp-dev_*.deb
 
       - name: Lint package
         run: |
@@ -192,7 +192,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: debian-packages-${{ matrix.ubuntu }}
-          path: /home/runner/work/hyperscan-cpp/packages/*.deb
+          path: /home/runner/work/libhs-cpp/packages/*.deb
           retention-days: 90
           if-no-files-found: warn
           compression-level: 6
@@ -201,6 +201,6 @@ jobs:
       - name: Upload to Release
         uses: softprops/action-gh-release@v1
         with:
-          files: /home/runner/work/hyperscan-cpp/packages/*.deb
+          files: /home/runner/work/libhs-cpp/packages/*.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

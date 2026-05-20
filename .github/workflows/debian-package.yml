@@ -216,8 +216,8 @@ jobs:
           set -euo pipefail
 
           VERSION="${PACKAGE_VERSION}"
-          SRC_DIR="${GITHUB_WORKSPACE}/../${PACKAGE_NAME}-${VERSION}"
-          PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/../packages/${DISTRO_CODENAME}"
+          SRC_DIR="${GITHUB_WORKSPACE}/${PACKAGE_NAME}-${VERSION}"
+          PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/packages/${DISTRO_CODENAME}"
 
           cd "${SRC_DIR}"
 
@@ -235,7 +235,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/../packages/${DISTRO_CODENAME}"
+          PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/packages/${DISTRO_CODENAME}"
 
           echo "Runtime package contents:"
           dpkg-deb -c "${PACKAGE_OUTPUT_DIR}/${RUNTIME_PACKAGE_NAME}_"*.deb
@@ -253,7 +253,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/../packages/${DISTRO_CODENAME}"
+          PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/packages/${DISTRO_CODENAME}"
 
           sudo apt-get update
           sudo apt-get install -y \
@@ -264,7 +264,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/../packages/${DISTRO_CODENAME}"
+          PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/packages/${DISTRO_CODENAME}"
 
           lintian "${PACKAGE_OUTPUT_DIR}"/*.deb
 

@@ -82,8 +82,7 @@ jobs:
           set -euo pipefail
 
           VERSION="${PACKAGE_VERSION}"
-          BUILD_ROOT="${GITHUB_WORKSPACE}/.."
-          SRC_DIR="${BUILD_ROOT}/${PACKAGE_NAME}-${VERSION}"
+          SRC_DIR="${GITHUB_WORKSPACE}/${PACKAGE_NAME}-${VERSION}"
           PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/packages/${DISTRO_CODENAME}"
 
           rm -rf "${SRC_DIR}"
@@ -102,7 +101,7 @@ jobs:
 
           cd "${SRC_DIR}"
 
-          tar czf "../${PACKAGE_NAME}_${VERSION}.orig.tar.gz" .
+          tar czf "${GITHUB_WORKSPACE}/${PACKAGE_NAME}_${VERSION}.orig.tar.gz" .
 
           mkdir -p debian/source
 

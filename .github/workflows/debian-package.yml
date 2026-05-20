@@ -273,7 +273,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: debian-packages-${{ matrix.codename }}-${{ env.PACKAGE_VERSION }}
-          path: packages/${{ matrix.codename }}/*.deb
+          path: ${{ github.workspace }}/packages/${{ matrix.codename }}/*.deb
           retention-days: 90
           if-no-files-found: error
           compression-level: 6
@@ -283,6 +283,6 @@ jobs:
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v3
         with:
-          files: packages/${{ matrix.codename }}/*.deb
+          files: ${{ github.workspace }}/packages/${{ matrix.codename }}/*.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

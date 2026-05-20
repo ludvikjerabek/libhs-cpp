@@ -110,7 +110,7 @@ jobs:
           EOF
 
           cat > debian/changelog <<EOF
-          ${PACKAGE_NAME} (${VERSION}-1~${DISTRO_CODENAME}) ${DISTRO_CODENAME}; urgency=medium
+          ${PACKAGE_NAME} (${VERSION}-1.${DISTRO_CODENAME}) ${DISTRO_CODENAME}; urgency=medium
 
             * Build ${PACKAGE_NAME} Debian packages.
             * Package shared runtime, static library, headers, and CMake development files.

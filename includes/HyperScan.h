@@ -1,6 +1,6 @@
 /*
  * @file HyperScan.h
- * @brief Primary include file needed to use the HyperScan C++ wrapper
+ * @brief Primary include file needed to use the HyperScan or VectorScan C++ wrapper
  * @author Ludvik Jerabek
  * @version 1.0 04/08/2021
  *
@@ -21,8 +21,8 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef HYPERSCAN_H
-#define HYPERSCAN_H
+#ifndef LIBHS_H
+#define LIBHS_H
 
 #include "Exceptions.h"
 #include "PlatformInfo.h"
@@ -49,4 +49,4 @@ namespace HyperScan {
         return (hs_code == HS_SUCCESS);
     }
 }
-#endif //HYPERSCAN_H
+#endif //LIBHS_H

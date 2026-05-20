@@ -33,7 +33,7 @@ private:
 };
 
 int main() {
-    // Global HyperScan functions
+    // Global HyperScan or VectorScan functions
 
     // Hyperscan requires the Supplemental Streaming SIMD Extensions 3 instruction set. This function can be called
     // on any x86 platform to determine if the system provides the required instruction set.

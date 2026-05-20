@@ -4,86 +4,152 @@ on:
   release:
     types: [created]
 
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Package version, for example 1.0.0. Leave empty to use the ref name."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
 jobs:
   build_deb:
     strategy:
+      fail-fast: false
       matrix:
-        ubuntu: ['ubuntu-20.04', 'ubuntu-22.04', 'ubuntu-24.04', 'ubuntu-26.04']
         include:
-          - ubuntu: 'ubuntu-20.04'
-            codename: 'focal'
-            debhelper: '12'
-          - ubuntu: 'ubuntu-22.04'
-            codename: 'jammy'
-            debhelper: '13'
-          - ubuntu: 'ubuntu-24.04'
-            codename: 'noble'
-            debhelper: '13'
-          - ubuntu: 'ubuntu-26.04'
-            codename: 'questing'
-            debhelper: '13'
-            
+          - ubuntu: ubuntu-22.04
+            codename: jammy
+            debhelper: "13"
+          - ubuntu: ubuntu-24.04
+            codename: noble
+            debhelper: "13"
+
     runs-on: ${{ matrix.ubuntu }}
-    defaults:
-      run:
-        working-directory: ${{ github.workspace }}
+
+    env:
+      PACKAGE_NAME: libhs-cpp
+      RUNTIME_PACKAGE_NAME: libhs-cpp1
+      DEV_PACKAGE_NAME: libhs-cpp-dev
+      DISTRO_CODENAME: ${{ matrix.codename }}
+      DEBHELPER_VERSION: ${{ matrix.debhelper }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Install build dependencies
         run: |
+          set -euo pipefail
+
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
-            dh-make \
-            devscripts \
-            lintian \
             cmake \
+            debhelper \
+            devscripts \
+            dpkg-dev \
+            lintian \
             libhyperscan-dev \
-            debhelper
+            rsync
 
-      - name: Set version
+      - name: Set package version
         run: |
-          echo "PACKAGE_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-          echo "DISTRO_CODENAME=${{ matrix.codename }}" >> $GITHUB_ENV
+          set -euo pipefail
 
-      - name: Create debian package files
+          if [ -n "${{ github.event.inputs.version || '' }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+
+          if [ -z "${VERSION}" ]; then
+            echo "PACKAGE_VERSION could not be determined."
+            exit 1
+          fi
+
+          echo "PACKAGE_VERSION=${VERSION}" >> "${GITHUB_ENV}"
+          echo "Package version: ${VERSION}"
+          echo "Distro codename: ${DISTRO_CODENAME}"
+
+      - name: Prepare Debian source tree
         run: |
-          VERSION=${{ env.PACKAGE_VERSION }}
-          
-          # Setup directory structure
-          cd ..
-          cp -r hyperscan-cpp hyperscan-cpp-${VERSION}
-          cd hyperscan-cpp-${VERSION}
-          
-          # Create orig archive
-          tar czf ../hyperscan-cpp_${VERSION}.orig.tar.gz .
-          
-          # Initialize debian directory with environment variables to avoid prompts
-          export DEBEMAIL="ludvikjerabek@users.noreply.github.com"
-          export DEBFULLNAME="Ludvik Jerabek"
-          dh_make --library --yes -p hyperscan-cpp_${VERSION}
+          set -euo pipefail
 
-          # Remove debian/compat if it exists
-          rm -f debian/compat
+          VERSION="${PACKAGE_VERSION}"
+          SRC_DIR="${GITHUB_WORKSPACE}/${PACKAGE_NAME}-${VERSION}"
+          PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/packages/${DISTRO_CODENAME}"
 
-          # Create a proper changelog
-          cat << EOF > debian/changelog
-          hyperscan-cpp (${VERSION}-1~${{ env.DISTRO_CODENAME }}) ${{ env.DISTRO_CODENAME }}; urgency=medium
+          rm -rf "${SRC_DIR}"
+          rm -rf "${PACKAGE_OUTPUT_DIR}"
 
-            * Initial release
-            * C++ wrapper for Intel's Hyperscan regular expression matching engine
+          mkdir -p "${SRC_DIR}"
+          mkdir -p "${PACKAGE_OUTPUT_DIR}"
+
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='debian' \
+            --exclude='build' \
+            --exclude='packages' \
+            "${GITHUB_WORKSPACE}/" "${SRC_DIR}/"
+
+          cd "${SRC_DIR}"
+
+          tar czf "${GITHUB_WORKSPACE}/${PACKAGE_NAME}_${VERSION}.orig.tar.gz" .
+
+          mkdir -p debian/source
+
+          cat > debian/source/format <<EOF
+          3.0 (quilt)
+          EOF
+
+          cat > debian/changelog <<EOF
+          ${PACKAGE_NAME} (${VERSION}-1.${DISTRO_CODENAME}) ${DISTRO_CODENAME}; urgency=medium
+
+            * Build ${PACKAGE_NAME} Debian packages.
+            * Package shared runtime, static library, headers, and CMake development files.
 
            -- Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>  $(date -R)
           EOF
 
-          # Create a proper copyright file
-          cat << EOF > debian/copyright
+          cat > debian/control <<EOF
+          Source: ${PACKAGE_NAME}
+          Section: libs
+          Priority: optional
+          Maintainer: Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>
+          Build-Depends: debhelper-compat (= ${DEBHELPER_VERSION}),
+           cmake,
+           libhyperscan-dev
+          Standards-Version: 4.5.1
+          Rules-Requires-Root: no
+
+          Package: ${RUNTIME_PACKAGE_NAME}
+          Architecture: any
+          Depends: \${shlibs:Depends}, \${misc:Depends}
+          Description: C++20 RAII wrapper for libhs-compatible regex engines
+           This package provides the shared runtime library for libhs-cpp.
+           .
+           libhs-cpp wraps libhs-compatible engines such as Intel Hyperscan
+           and VectorCamp VectorScan using modern C++20 RAII abstractions.
+
+          Package: ${DEV_PACKAGE_NAME}
+          Architecture: any
+          Section: libdevel
+          Depends: ${RUNTIME_PACKAGE_NAME} (= \${binary:Version}), \${misc:Depends}, libhyperscan-dev
+          Description: development files for libhs-cpp
+           This package provides headers, CMake files, the unversioned shared
+           library symlink, and the static library for building applications
+           against libhs-cpp.
+          EOF
+
+          cat > debian/copyright <<EOF
           Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-          Upstream-Name: hyperscan-cpp
+          Upstream-Name: ${PACKAGE_NAME}
           Upstream-Contact: Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>
-          Source: https://github.com/ludvikjerabek/hyperscan-cpp
+          Source: https://github.com/ludvikjerabek/libhs-cpp
 
           Files: *
           Copyright: 2024 Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>
@@ -109,45 +175,20 @@ jobs:
           Files: debian/*
           Copyright: 2024 Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>
           License: MIT
+           Same as above.
           EOF
 
-          # Replace default debian files with our versions
-          cat << EOF > debian/control
-          Source: hyperscan-cpp
-          Section: libs
-          Priority: optional
-          Maintainer: Ludvik Jerabek <ludvikjerabek@users.noreply.github.com>
-          Build-Depends: debhelper-compat (= ${{ matrix.debhelper }}),
-           cmake,
-           libhyperscan-dev
-          Standards-Version: 4.5.1
-
-          Package: libhyperscan-cpp
-          Architecture: any
-          Depends: \${shlibs:Depends}, \${misc:Depends}, libhyperscan-dev
-          Description: C++ wrapper for Hyperscan library
-           A C++ wrapper library for Intel's Hyperscan regular expression matching engine.
-           This package contains the shared library.
-
-          Package: libhyperscan-cpp-dev
-          Architecture: any
-          Section: libdevel
-          Depends: libhyperscan-cpp (= \${binary:Version}), \${misc:Depends}, libhyperscan-dev
-          Description: Development files for hyperscan-cpp
-           A C++ wrapper library for Intel's Hyperscan regular expression matching engine.
-           This package contains development files.
-          EOF
-
-          cat << EOF > debian/rules
+          cat > debian/rules <<'EOF'
           #!/usr/bin/make -f
+
           %:
-          	dh \$@ --buildsystem=cmake
+          	dh $@ --buildsystem=cmake
 
           override_dh_auto_configure:
           	dh_auto_configure -- \
           		-DCMAKE_BUILD_TYPE=Release \
           		-DBUILD_SHARED_LIBS=ON \
-          		-DBUILD_STATIC_LIBS=OFF \
+          		-DBUILD_STATIC_LIBS=ON \
           		-DCMAKE_INSTALL_PREFIX=/usr
 
           override_dh_install:
@@ -156,55 +197,88 @@ jobs:
 
           chmod +x debian/rules
 
-          cat << EOF > debian/libhyperscan-cpp.install
-          usr/lib/libhyperscan-cpp.so.*
+          cat > "debian/${RUNTIME_PACKAGE_NAME}.install" <<EOF
+          usr/lib/*/libhs-cpp.so.*
           EOF
 
-          cat << EOF > debian/libhyperscan-cpp-dev.install
-          usr/include/hyperscan-cpp/*
-          usr/lib/libhyperscan-cpp.so
-          usr/lib/cmake/hyperscan-cpp/*
+          cat > "debian/${DEV_PACKAGE_NAME}.install" <<EOF
+          usr/include/libhs-cpp/*
+          usr/lib/*/libhs-cpp.so
+          usr/lib/*/libhs-cpp.a
+          usr/lib/*/cmake/libhs-cpp/*
           EOF
 
-          # Create the source format file
-          mkdir -p debian/source
-          echo "3.0 (quilt)" > debian/source/format
-
-      - name: Build debian package
+      - name: Build Debian packages
         run: |
-          VERSION=${{ env.PACKAGE_VERSION }}
-          cd ../hyperscan-cpp-${VERSION}
-          dpkg-buildpackage -us -uc
-          mkdir -p ../packages
-          cp ../libhyperscan-cpp_*.deb ../packages/
-          cp ../libhyperscan-cpp-dev_*.deb ../packages/
+          set -euo pipefail
+
+          VERSION="${PACKAGE_VERSION}"
+          SRC_DIR="${GITHUB_WORKSPACE}/${PACKAGE_NAME}-${VERSION}"
+          PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/packages/${DISTRO_CODENAME}"
+
+          cd "${SRC_DIR}"
+
+          dpkg-buildpackage -us -uc -b
+
+          mkdir -p "${PACKAGE_OUTPUT_DIR}"
+
+          cp "../${RUNTIME_PACKAGE_NAME}_"*.deb "${PACKAGE_OUTPUT_DIR}/"
+          cp "../${DEV_PACKAGE_NAME}_"*.deb "${PACKAGE_OUTPUT_DIR}/"
+
+          echo "Built packages:"
+          ls -lh "${PACKAGE_OUTPUT_DIR}"
+
+      - name: Verify Debian package contents
+        run: |
+          set -euo pipefail
+
+          PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/packages/${DISTRO_CODENAME}"
+
+          echo "Runtime package contents:"
+          dpkg-deb -c "${PACKAGE_OUTPUT_DIR}/${RUNTIME_PACKAGE_NAME}_"*.deb
+
+          echo "Development package contents:"
+          dpkg-deb -c "${PACKAGE_OUTPUT_DIR}/${DEV_PACKAGE_NAME}_"*.deb
+
+          echo "Check required runtime files:"
+          dpkg-deb -c "${PACKAGE_OUTPUT_DIR}/${RUNTIME_PACKAGE_NAME}_"*.deb | grep -E 'libhs-cpp\.so\.[0-9]'
+
+          echo "Check required development files:"
+          dpkg-deb -c "${PACKAGE_OUTPUT_DIR}/${DEV_PACKAGE_NAME}_"*.deb | grep -E 'libhs-cpp\.so$|libhs-cpp\.a|include/libhs-cpp|cmake/libhs-cpp'
 
       - name: Test package installation
         run: |
-          VERSION=${{ env.PACKAGE_VERSION }}
-          cd ..
-          sudo dpkg -i packages/libhyperscan-cpp_*.deb
-          sudo dpkg -i packages/libhyperscan-cpp-dev_*.deb
+          set -euo pipefail
 
-      - name: Lint package
+          PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/packages/${DISTRO_CODENAME}"
+
+          sudo apt-get update
+          sudo apt-get install -y \
+            "${PACKAGE_OUTPUT_DIR}/${RUNTIME_PACKAGE_NAME}_"*.deb \
+            "${PACKAGE_OUTPUT_DIR}/${DEV_PACKAGE_NAME}_"*.deb
+
+      - name: Lint Debian packages
         run: |
-          VERSION=${{ env.PACKAGE_VERSION }}
-          cd ..
-          lintian packages/*.deb
+          set -euo pipefail
 
-      - name: Upload packages as artifacts
-        uses: actions/upload-artifact@v4
+          PACKAGE_OUTPUT_DIR="${GITHUB_WORKSPACE}/packages/${DISTRO_CODENAME}"
+
+          lintian "${PACKAGE_OUTPUT_DIR}"/*.deb
+
+      - name: Upload packages as workflow artifacts
+        uses: actions/upload-artifact@v6
         with:
-          name: debian-packages-${{ matrix.ubuntu }}
-          path: /home/runner/work/hyperscan-cpp/packages/*.deb
+          name: debian-packages-${{ matrix.codename }}-${{ env.PACKAGE_VERSION }}
+          path: ${{ github.workspace }}/packages/${{ matrix.codename }}/*.deb
           retention-days: 90
-          if-no-files-found: warn
+          if-no-files-found: error
           compression-level: 6
           overwrite: false
 
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload packages to GitHub Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v3
         with:
-          files: /home/runner/work/hyperscan-cpp/packages/*.deb
+          files: ${{ github.workspace }}/packages/${{ matrix.codename }}/*.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

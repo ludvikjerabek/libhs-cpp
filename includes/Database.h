@@ -1,6 +1,6 @@
 /*
  * @file Database.h
- * @brief Database base class. Wrapper for hs_database_t for HyperScan. This class should not be constructed directly.
+ * @brief Database base class. Wrapper for hs_database_t for HyperScan or VectorScan. This class should not be constructed directly.
  * @author Ludvik Jerabek
  * @version 1.0 04/08/2021
  *
@@ -21,8 +21,8 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef HYPERSCAN_DATABASE_H
-#define HYPERSCAN_DATABASE_H
+#ifndef LIBHS_DATABASE_H
+#define LIBHS_DATABASE_H
 
 #include <hs/hs.h>
 #include <memory>
@@ -93,4 +93,4 @@ class Database {
 };
 }
 
-#endif //HYPERSCAN_DATABASE_H
+#endif //LIBHS_DATABASE_H

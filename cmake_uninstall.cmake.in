@@ -1,20 +1,21 @@
-if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-    message(FATAL_ERROR "CMAKE_INSTALL_PREFIX is not defined")
+if(NOT EXISTS "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
+    message(FATAL_ERROR "Cannot find install_manifest.txt")
 endif()
 
-file(GLOB_RECURSE files_to_remove
-    "${CMAKE_INSTALL_PREFIX}/lib/libhyperscan-cpp*"
-    "${CMAKE_INSTALL_PREFIX}/include/hyperscan-cpp/*"
-    "${CMAKE_INSTALL_PREFIX}/lib/cmake/hyperscan-cpp/*"
-)
+file(READ "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt" files)
 
-foreach(file ${files_to_remove})
+string(REGEX REPLACE "\n" ";" files "${files}")
+
+foreach(file ${files})
     message(STATUS "Removing ${file}")
-    if(EXISTS "${file}")
+
+    if(EXISTS "${file}" OR IS_SYMLINK "${file}")
         file(REMOVE "${file}")
+    else()
+        message(STATUS "File does not exist: ${file}")
     endif()
 endforeach()
 
-# Try to remove directories (will only work if empty)
-file(REMOVE_RECURSE "${CMAKE_INSTALL_PREFIX}/include/hyperscan-cpp")
-file(REMOVE_RECURSE "${CMAKE_INSTALL_PREFIX}/lib/cmake/hyperscan-cpp")
+# Try to remove directories
+file(REMOVE_RECURSE "@CMAKE_INSTALL_PREFIX@/include/libhs-cpp")
+file(REMOVE_RECURSE "@CMAKE_INSTALL_PREFIX@/lib/cmake/libhs-cpp")

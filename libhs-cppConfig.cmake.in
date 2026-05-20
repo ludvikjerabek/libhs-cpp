@@ -1,0 +1,10 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(Threads REQUIRED)
+
+# libhs is provided by the libhyperscan-dev dependency already declared in debian/control
+
+include("${CMAKE_CURRENT_LIST_DIR}/libhs-cppTargets.cmake")
+
+check_required_components(libhs-cpp)

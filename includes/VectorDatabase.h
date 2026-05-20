@@ -1,6 +1,6 @@
 /*
  * @file VectorDatabase.h
- * @brief Derived from Database class provides VectorDatabase functions for HyperScan
+ * @brief Derived from Database class provides VectorDatabase functions for HyperScan or VectorScan
  * @author Ludvik Jerabek
  * @version 1.0 04/08/2021
  *
@@ -22,8 +22,8 @@
  */
 
 
-#ifndef HYPERSCAN_VECTOREDDATABASE_H
-#define HYPERSCAN_VECTOREDDATABASE_H
+#ifndef LIBHS_VECTOREDDATABASE_H
+#define LIBHS_VECTOREDDATABASE_H
 
 #include "Database.h"
 #include <memory>
@@ -50,4 +50,4 @@ namespace HyperScan {
     };
 }
 
-#endif //HYPERSCAN_VECTOREDDATABASE_H
+#endif //LIBHS_VECTOREDDATABASE_H

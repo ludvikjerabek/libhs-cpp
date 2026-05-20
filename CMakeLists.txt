@@ -17,7 +17,7 @@ find_library(LIBHS_LIBRARY NAMES hs)
 find_path(LIBHS_INCLUDE_DIR NAMES hs/hs.h)
 
 if(NOT LIBHS_LIBRARY OR NOT LIBHS_INCLUDE_DIR)
-    message(FATAL_ERROR "Could not find libhs. Install Intel Hyperscan or VectorScan, or set LIBHS_LIBRARY and LIBHS_INCLUDE_DIR.")
+    message(FATAL_ERROR "Could not find libhs. Install Intel Hyperscan or VectorCamp VectorScan, or set LIBHS_LIBRARY and LIBHS_INCLUDE_DIR.")
 endif()
 
 message(STATUS "libhs Library: ${LIBHS_LIBRARY}")
@@ -80,47 +80,65 @@ if(BUILD_STATIC_LIBS)
     )
 endif()
 
-# Install headers
-install(DIRECTORY includes/
-        DESTINATION include/libhs-cpp
+# === Modern installation using GNUInstallDirs (multi-arch friendly) ===
+include(GNUInstallDirs)
+
+# Install headers from both directories (keeps your current layout)
+install(DIRECTORY includes/ src/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libhs-cpp
         FILES_MATCHING PATTERN "*.h"
+        PATTERN "CMakeLists.txt" EXCLUDE
 )
 
-install(DIRECTORY src/
-        DESTINATION include/libhs-cpp
-        FILES_MATCHING PATTERN "*.h"
-)
-
-# Install libraries
+# Install shared library (if enabled)
 if(BUILD_SHARED_LIBS)
     install(TARGETS libhs-cpp
             EXPORT libhs-cppTargets
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin
-            INCLUDES DESTINATION include/libhs-cpp
+            LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR}
+            INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libhs-cpp
     )
 endif()
 
+# Install static library (if enabled)
 if(BUILD_STATIC_LIBS)
     install(TARGETS libhs-cpp-static
             EXPORT libhs-cppTargets
-            ARCHIVE DESTINATION lib
-            INCLUDES DESTINATION include/libhs-cpp
+            ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libhs-cpp
     )
 endif()
 
-# Installation and versioning
+# === Proper CMake package configuration (enables find_package) ===
 include(CMakePackageConfigHelpers)
+
+# Version file
 write_basic_package_version_file(
         "${CMAKE_CURRENT_BINARY_DIR}/libhs-cppConfigVersion.cmake"
         VERSION ${PROJECT_VERSION}
-        COMPATIBILITY AnyNewerVersion
+        COMPATIBILITY SameMajorVersion
 )
 
+# Config file (you must create libhs-cppConfig.cmake.in — see below)
+configure_package_config_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/libhs-cppConfig.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/libhs-cppConfig.cmake"
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libhs-cpp
+)
+
+# Export targets with nice namespace
 install(EXPORT libhs-cppTargets
         FILE libhs-cppTargets.cmake
-        DESTINATION lib/cmake/libhs-cpp
+        NAMESPACE libhs-cpp::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libhs-cpp
+)
+
+# Install config + version files
+install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/libhs-cppConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/libhs-cppConfigVersion.cmake"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libhs-cpp
 )
 
 # Build example programs
